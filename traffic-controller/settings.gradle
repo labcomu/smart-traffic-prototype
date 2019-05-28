@@ -1,0 +1,10 @@
+pluginManagement {
+	repositories {
+		gradlePluginPortal()
+	}
+}
+
+// include   ':circuitbreaker'
+// project(':circuitbreaker').projectDir = new File(settingsDir, '../circuitbreaker')
+
+rootProject.name = 'traffic-controller'
