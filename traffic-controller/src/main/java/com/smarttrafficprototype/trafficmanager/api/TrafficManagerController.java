@@ -3,6 +3,7 @@ package com.smarttrafficprototype.trafficmanager.api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.smarttrafficprototype.trafficmanager.FailureManager;
+import com.smarttrafficprototype.trafficmanager.Setup;
 import com.smarttrafficprototype.trafficmanager.service.SetupService;
 import com.smarttrafficprototype.trafficmanager.service.TrafficJunctionService;
 
@@ -20,9 +23,14 @@ public class TrafficManagerController {
 	
 	@Autowired
 	private TrafficJunctionService service;
-	
+	@Autowired
+	private FailureManager failureManager;
 	@Autowired
 	private SetupService setupService;
+	@Autowired
+	private Setup setupManager;
+	@Value("${setup.omission.duration}")
+	private int omissionLockDuration;
 	
 	public Logger logger = LoggerFactory.getLogger(getClass());
 	
@@ -32,14 +40,21 @@ public class TrafficManagerController {
 		ResponseEntity<Integer> response;
 		
 		try {
-			logger.info("Starting:"+"TrafficManager.call() to " + idJunction);
+			if (failureManager.isFailed()) {
+				synchronized(this) {
+				  logger.info("Omission:IoTDevice.getDeviceData()[ExecutionTime(ms)="+ setupManager.getExecutionTime() + "]");
+				   wait(omissionLockDuration);
+				}
+				response = new ResponseEntity<Integer>(HttpStatus.SERVICE_UNAVAILABLE);
+			} else {
+				logger.info("Starting:"+"TrafficManager.call() to " + idJunction);
+				
+				Integer densityValue = service.getOutboundDensityByTrafficJuncion(idJunction);
+				
+				logger.info("Returning:"+"TrafficManager.call():"+densityValue);
 
-			
-			Integer densityValue = service.getOutboundDensityByTrafficJuncion(idJunction);
-			
-			logger.info("Returning:"+"TrafficManager.call():"+densityValue);
-
-			response = new ResponseEntity<>(densityValue, HttpStatus.OK);
+				response = new ResponseEntity<>(densityValue, HttpStatus.OK);	
+			}
 			
 		} catch (Exception e) {
 			
