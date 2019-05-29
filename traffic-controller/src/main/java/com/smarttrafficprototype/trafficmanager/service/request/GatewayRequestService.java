@@ -30,7 +30,9 @@ public class GatewayRequestService implements RemoteRequestService {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public Double requestDensity(String host, String port, String[] values) {
+	public Integer requestDensity(String host, String port, String[] values) {
+		
+		Integer result = Integer.MIN_VALUE;
 		
 		String baseUrl = new StringBuilder("http://")
 				.append(gatewayHost)
@@ -38,7 +40,6 @@ public class GatewayRequestService implements RemoteRequestService {
 				.append(gatewayPort)
 				.append("/gateway").toString();
 		
-		Double result =null;
 
 		try {	
 			HttpHeaders headers = new HttpHeaders();
@@ -50,7 +51,7 @@ public class GatewayRequestService implements RemoteRequestService {
 			
 			logger.info("Request Started: "+baseUrl+"->["+host+":"+port+"]");
 
-			ResponseEntity<Double> response = restTemplate.exchange(baseUrl, HttpMethod.GET, httpEntity, Double.class);
+			ResponseEntity<Integer> response = restTemplate.exchange(baseUrl, HttpMethod.GET, httpEntity, Integer.class);
 			
 			result = response.getBody();
 			

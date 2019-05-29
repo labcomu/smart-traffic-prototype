@@ -25,12 +25,17 @@ public class DeviceCBRequestService implements RemoteRequestService {
 
 		Integer result = Integer.MIN_VALUE;
 
-		String baseUrl = new StringBuilder("http://")
+		StringBuilder urlBuilder = new StringBuilder("http://")
 				.append(deviceHost)
 				.append(":")
 				.append(devicePort)
-				.append("/trafficManager/")
-				.append("{idJunction}").toString();
+				.append("/trafficManager/");
+		
+		for (String value : values) {
+			urlBuilder.append("/").append(value);
+		}
+		
+		String baseUrl = urlBuilder.toString();
 
 		try {
 			logger.info("Request Started: " + baseUrl);
