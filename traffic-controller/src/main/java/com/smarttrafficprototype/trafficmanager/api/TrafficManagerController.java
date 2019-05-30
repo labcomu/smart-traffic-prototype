@@ -91,5 +91,13 @@ public class TrafficManagerController {
 		
 		return new ResponseEntity<>("SETUP OK", HttpStatus.OK);
 	}
+	
+	@GetMapping("/setuped")
+	public ResponseEntity<String> setuped() {
+		
+		setupManager.activate();
+		
+		return new ResponseEntity<>("SETUP OK", HttpStatus.OK);
+	}
 
 }

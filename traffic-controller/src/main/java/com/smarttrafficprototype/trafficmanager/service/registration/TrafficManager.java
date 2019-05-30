@@ -155,9 +155,9 @@ public class TrafficManager {
 			} catch (Exception ex) {
 				incomingDensity = 0;
 				if (getCurrentDuration() > executionCycleDuration) {
-					classification = Classification.INCOMPLETE;
+					classification = Classification.FAILED;
 				} else {
-					classification = Classification.PARTIALlY_COMPLETE;
+					classification = Classification.INCOMPLETE;
 				}
 			}
 			

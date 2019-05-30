@@ -34,10 +34,13 @@ public class SetupService {
 		
 		configureRestTemplateForSetup();
 
-		for (int i = 1; i < serviceRegistry.getTrafficJunctions().size(); i++ ) {
+		for (int i = 0; i < serviceRegistry.getTrafficJunctions().size(); i++ ) {
+			if (i == serviceRegistry.getIdCurrentJunction()) {
+				continue;
+			}
 			TrafficJunction trafficJunction = serviceRegistry.getTrafficJunctions().get(i);
 			restTemplate.getForObject(new StringBuilder("http://").append(trafficJunction.getHost()).append(":")
-					.append(trafficJunction.getPort()).append("/trafficManager/setup").toString(), String.class);
+					.append(trafficJunction.getPort()).append("/trafficManager/setuped").toString(), String.class);
 		}
 		
 		
