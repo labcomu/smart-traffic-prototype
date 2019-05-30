@@ -25,7 +25,7 @@ public class CSVWriter {
 			
 			for (ExecutionCycle cycle : cyclesRepository.getAll()) {
 				sb.append(cycle.getId()).append(',');
-				sb.append(cycle.getMoment()).append(',');
+				sb.append(cycle.getMoment().getTime()).append(',');
 				sb.append(cycle.getDuration()).append(',');
 				sb.append(cycle.getClassification().toString()).append('\n');
 			}
