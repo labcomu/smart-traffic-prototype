@@ -43,7 +43,7 @@ public class TrafficManager {
 	private Integer trafficJunctionCycleDuration = 180;
 	@Value("${setup.windowTimeCalculationInSec}")
 	private Integer windowTimeCalculation = 5;
-	@Value("${setup.setup.executionCycleDurationInMili}")
+	@Value("${setup.executionCycleDurationInMili}")
 	private Long executionCycleDuration = 1000l;
 	
 	private Date greenLightStartTime = new Date();
@@ -57,7 +57,7 @@ public class TrafficManager {
 	
 	
 	
-	@Scheduled(initialDelay=0, fixedDelayString="${setup.setup.executionCycleDurationInMili}")
+	@Scheduled(initialDelay=0, fixedDelayString="${setup.executionCycleDurationInMili}")
 	public void run() throws Exception {
 		starting = new Date().getTime();
 		classification = Classification.COMPLETE;
@@ -72,6 +72,7 @@ public class TrafficManager {
 		trafficJunction.toString();
 		
 		if (greenLightTimeRemaining > windowTimeCalculation) {
+			logExecution();
 			return;
 		}
 		
