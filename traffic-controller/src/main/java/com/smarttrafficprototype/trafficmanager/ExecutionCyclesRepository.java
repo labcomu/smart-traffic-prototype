@@ -16,19 +16,7 @@ public class ExecutionCyclesRepository {
 		return cycles;
 	}
 	
-	public void addCompleteExecution(long duration) {
-		addExecution(duration, Classification.COMPLETE);
-	}
-	
-	public void addIncompleteExecution(long duration) {
-		addExecution(duration, Classification.INCOMPLETE);
-	}
-
-	public void addPartiallyCompleteExecution(long duration) {
-		addExecution(duration, Classification.PARTIALlY_COMPLETE);
-	}
-	
-	private void addExecution(long duration, Classification classification) {
+	public void addExecution(long duration, Classification classification) {
 		cycles.add(new ExecutionCycle(++count, new Date(), duration, classification));
 	}
 	

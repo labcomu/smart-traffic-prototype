@@ -11,11 +11,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.smarttrafficprototype.trafficmanager.Classification;
+import com.smarttrafficprototype.trafficmanager.ExecutionCyclesRepository;
 import com.smarttrafficprototype.trafficmanager.service.ServiceRegistry;
 import com.smarttrafficprototype.trafficmanager.service.request.RemoteRequestService;
 
 @Component
 public class TrafficManager {
+	private static final int FINAL_SECOND = 1;
+
 	private static final int MILLISECONDS = 1000;
 
 	public Logger logger = LoggerFactory.getLogger(getClass());
@@ -26,31 +30,42 @@ public class TrafficManager {
 	private RemoteRequestService requestService;
 	@Autowired
 	private ServiceRegistry serviceRegistry;
+	@Autowired
+	private ExecutionCyclesRepository repository;
 	
-	@Value("${setup.greenSignDurationInSec}")
-	private Integer greenSignDuration = 10;
+	@Value("${setup.greenLight.initialDurationInSec}")
+	private Integer initialGreenLightDuration = 10;
+	@Value("${setup.greenLight.minimumDuration}")
+	private Integer minimumGreenLightDuration = 10;
+	@Value("${setup.greenLight.maximumDuration}")
+	private Integer maximumGreenLightDuration = 60;
+	@Value("${setup.trafficJunctionCycleDuration}")
+	private Integer trafficJunctionCycleDuration = 180;
 	@Value("${setup.windowTimeCalculationInSec}")
 	private Integer windowTimeCalculation = 5;
-	@Value("${setup.minimumGreenLightDuration}")
-	private Integer minimumGreenLightDuration = 10;
-	@Value("${setup.maximumGreenLightDuration}")
-	private Integer maximumGreenLightDuration = 60;
-	@Value("${setup.maximumGreenLightDuration}")
-	private Integer trafficJunctionCycleDuration = 180;
+	@Value("${setup.setup.executionCycleDurationInMili}")
+	private Long executionCycleDuration = 1000l;
 	
 	private Date greenLightStartTime = new Date();
 	private boolean nextLineChosen;
-	private static int timeInSeconds;
 	private InboundTrafficLine lineMaxDensity;
 	
+	private static long starting;
+	private static Classification classification;
+	private static int timeInSeconds;
 	
 	
-	@Scheduled(initialDelay=0, fixedDelayString="${setup.calculationTimeDurationInMili}")
+	
+	
+	@Scheduled(initialDelay=0, fixedDelayString="${setup.setup.executionCycleDurationInMili}")
 	public void run() throws Exception {
+		starting = new Date().getTime();
+		classification = Classification.COMPLETE;
+		
 		triggerSensors();
 		
 		Long greenLightTimeElapsed = new Date().getTime() - greenLightStartTime.getTime();
-		Integer greenLightTimeRemaining =  greenSignDuration - (greenLightTimeElapsed.intValue() / MILLISECONDS);
+		Integer greenLightTimeRemaining =  initialGreenLightDuration - (greenLightTimeElapsed.intValue() / MILLISECONDS);
 		
 		logger.info("Green light remainging time: " + greenLightTimeRemaining + " seconds");
 		
@@ -61,13 +76,19 @@ public class TrafficManager {
 		}
 		
 		
-		calculateNextTimeGreenSign();
+		calculateNextTimeGreenLight();
 		
-		changeTrafficLineGreenSign(greenLightTimeRemaining);
+		changeTrafficLineGreenLight(greenLightTimeRemaining);
+		
+		logExecution();
 	}
 
-	private void changeTrafficLineGreenSign(Integer greenLightTimeRemaining) {
-		if (greenLightTimeRemaining < 1) {
+	private void logExecution() {
+		repository.addExecution(getCurrentDuration(), classification);
+	}
+
+	private void changeTrafficLineGreenLight(Integer greenLightTimeRemaining) {
+		if (greenLightTimeRemaining < FINAL_SECOND) {
 			setGreenLightDuration();
 			
 			InboundTrafficLine greenTrafficLine = trafficJunction.getInboundLines()
@@ -87,15 +108,15 @@ public class TrafficManager {
 
 	private void setGreenLightDuration() {
 		if (timeInSeconds <= minimumGreenLightDuration) {
-			greenSignDuration = minimumGreenLightDuration;
+			initialGreenLightDuration = minimumGreenLightDuration;
 		} else if (timeInSeconds > maximumGreenLightDuration) {
-			greenSignDuration = maximumGreenLightDuration;
+			initialGreenLightDuration = maximumGreenLightDuration;
 		} else {
-			greenSignDuration = timeInSeconds;
+			initialGreenLightDuration = timeInSeconds;
 		}
 	}
 
-	private void calculateNextTimeGreenSign() {
+	private void calculateNextTimeGreenLight() {
 		if (!nextLineChosen) {
 			List<InboundTrafficLine> redLines = trafficJunction.getInboundLines()
 					.stream().filter((inLn) -> inLn.getTrafficLight().isRed()).collect(Collectors.toList());
@@ -122,19 +143,28 @@ public class TrafficManager {
 		for (InboundTrafficLine trafficLine : inboundLines) {
 			TrafficJunction inboundTrafficJunction = trafficLine.getInboundTrafficJunction();
 			Integer incomingDensity = 0;
-			if (inboundTrafficJunction != null) {
-				try {
+			try {
+				if (inboundTrafficJunction != null) {
 					incomingDensity = requestService.requestDensity(
 							inboundTrafficJunction.getHost(), inboundTrafficJunction.getPort(), new String[]{trafficJunction.getJunctionKey()});
 					
 					logger.info("Incoming density: " + incomingDensity + " from " + trafficLine.getInboundTrafficJunction().getJunctionKey());
-				} catch (Exception ex) {
-					incomingDensity = 0;
+				}
+			} catch (Exception ex) {
+				incomingDensity = 0;
+				if (getCurrentDuration() > executionCycleDuration) {
+					classification = Classification.INCOMPLETE;
+				} else {
+					classification = Classification.PARTIALlY_COMPLETE;
 				}
 			}
 			
 			trafficLine.setIncomingDensity(incomingDensity);
 		}
+	}
+	
+	private long getCurrentDuration() {
+		return new Date().getTime() - starting;
 	}
 	
 	private void triggerSensors() {

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.smarttrafficprototype.trafficmanager.CSVWriter;
 import com.smarttrafficprototype.trafficmanager.FailureManager;
 import com.smarttrafficprototype.trafficmanager.Setup;
 import com.smarttrafficprototype.trafficmanager.service.SetupService;
@@ -29,6 +30,8 @@ public class TrafficManagerController {
 	private SetupService setupService;
 	@Autowired
 	private Setup setupManager;
+	@Autowired
+	private CSVWriter csvWriter;
 	@Value("${setup.omission.duration}")
 	private int omissionLockDuration;
 	
@@ -42,7 +45,7 @@ public class TrafficManagerController {
 		try {
 			if (failureManager.isFailed()) {
 				synchronized(this) {
-				  logger.info("Omission:IoTDevice.getDeviceData()[ExecutionTime(ms)="+ setupManager.getExecutionTime() + "]");
+				  logger.info("Omission:TrafficManagerController.call()[ExecutionTime(ms)="+ setupManager.getExecutionTime() + "]");
 				   wait(omissionLockDuration);
 				}
 				response = new ResponseEntity<Integer>(HttpStatus.SERVICE_UNAVAILABLE);
@@ -69,6 +72,12 @@ public class TrafficManagerController {
 		
 		return response;
 		
+	}
+	
+	@GetMapping("/csv")
+	public ResponseEntity<String> writeResults() {
+		csvWriter.writeCSV();
+		return new ResponseEntity<>("CSV OK", HttpStatus.OK);
 	}
 	
 	
