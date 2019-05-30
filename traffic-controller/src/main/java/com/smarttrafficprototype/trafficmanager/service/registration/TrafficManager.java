@@ -47,7 +47,7 @@ public class TrafficManager {
 	private Long executionCycleDuration = 1000l;
 	
 	private Date greenLightStartTime = new Date();
-	private boolean nextLineChosen;
+	private Integer greenLightTimeRemaining;
 	private InboundTrafficLine lineMaxDensity;
 	
 	private static long starting;
@@ -57,7 +57,8 @@ public class TrafficManager {
 	
 	
 	
-	@Scheduled(initialDelay=0, fixedDelayString="${setup.executionCycleDurationInMili}")
+	
+	@Scheduled(initialDelayString="${setup.initialExecutionDelayInMili}", fixedDelayString="${setup.executionCycleDurationInMili}")
 	public void run() throws Exception {
 		starting = new Date().getTime();
 		classification = Classification.COMPLETE;
@@ -65,21 +66,15 @@ public class TrafficManager {
 		triggerSensors();
 		
 		Long greenLightTimeElapsed = new Date().getTime() - greenLightStartTime.getTime();
-		Integer greenLightTimeRemaining =  initialGreenLightDuration - (greenLightTimeElapsed.intValue() / MILLISECONDS);
+		greenLightTimeRemaining =  initialGreenLightDuration - (greenLightTimeElapsed.intValue() / MILLISECONDS);
 		
 		logger.info("Green light remainging time: " + greenLightTimeRemaining + " seconds");
 		
 		trafficJunction.toString();
 		
-		if (greenLightTimeRemaining > windowTimeCalculation) {
-			logExecution();
-			return;
-		}
-		
-		
 		calculateNextTimeGreenLight();
 		
-		changeTrafficLineGreenLight(greenLightTimeRemaining);
+		changeTrafficLineGreenLight();
 		
 		logExecution();
 	}
@@ -88,7 +83,7 @@ public class TrafficManager {
 		repository.addExecution(getCurrentDuration(), classification);
 	}
 
-	private void changeTrafficLineGreenLight(Integer greenLightTimeRemaining) {
+	private void changeTrafficLineGreenLight() {
 		if (greenLightTimeRemaining < FINAL_SECOND) {
 			setGreenLightDuration();
 			
@@ -103,7 +98,6 @@ public class TrafficManager {
 			
 			trafficJunction.getOutboundLines().forEach((out) -> out.getSensingUnit().clearDensity());
 			
-			nextLineChosen = false;
 		}
 	}
 
@@ -118,7 +112,7 @@ public class TrafficManager {
 	}
 
 	private void calculateNextTimeGreenLight() {
-		if (!nextLineChosen) {
+		if (greenLightTimeRemaining > FINAL_SECOND) {
 			List<InboundTrafficLine> redLines = trafficJunction.getInboundLines()
 					.stream().filter((inLn) -> inLn.getTrafficLight().isRed()).collect(Collectors.toList());
 			
@@ -136,7 +130,6 @@ public class TrafficManager {
 			
 			logger.info("Calculating time of next green: (" + lineMaxDensity.getTotalDensity() + "/" + totalDensity + ") * "+trafficJunctionCycleDuration+" = " + timeInSeconds );
 			
-			nextLineChosen = true;
 		}
 	}
 	
