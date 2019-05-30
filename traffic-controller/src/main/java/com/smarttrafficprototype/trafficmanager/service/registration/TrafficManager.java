@@ -188,6 +188,7 @@ public class TrafficManager {
 				if (getCurrentDuration() > executionCycleDuration) {
 					classification = Classification.FAILED;
 					executionFailed = true;
+					logExecution();
 					return;
 				} else {
 					classification = Classification.INCOMPLETE;
