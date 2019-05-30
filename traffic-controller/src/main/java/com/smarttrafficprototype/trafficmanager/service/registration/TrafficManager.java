@@ -61,7 +61,7 @@ public class TrafficManager {
 	
 	
 	
-	@Scheduled(initialDelayString="${setup.initialExecutionDelayInMili}", fixedDelayString="${setup.executionCycleDurationInMili}")
+	@Scheduled(initialDelayString="${setup.initialExecutionDelayInMili}", fixedRateString="${setup.executionCycleDurationInMili}")
 	public void run() throws Exception {
 		
 		if (!setup.isActive()) {
