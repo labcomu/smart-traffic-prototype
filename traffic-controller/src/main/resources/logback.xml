@@ -10,7 +10,7 @@
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<rollingPolicy
 			class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>../logs/caller-experiment-data-%d{yyyy-MM-dd}.log
+			<fileNamePattern>../logs/traffic-experiment-data-%d{yyyy-MM-dd}.log
 			</fileNamePattern>
 		</rollingPolicy>
 		<encoder>
@@ -26,6 +26,9 @@
 	</appender>
 	
 	<logger name="com.microthingsexperiment" level="INFO" additivity="true">
+		<appender-ref ref="apppender-experiment" />
+	</logger>
+	<logger name="com.smarttrafficprototype" level="INFO" additivity="true">
 		<appender-ref ref="apppender-experiment" />
 	</logger>
 </configuration>
