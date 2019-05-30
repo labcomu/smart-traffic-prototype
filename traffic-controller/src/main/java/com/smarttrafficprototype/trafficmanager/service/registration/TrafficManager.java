@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.smarttrafficprototype.trafficmanager.CSVWriter;
 import com.smarttrafficprototype.trafficmanager.Classification;
 import com.smarttrafficprototype.trafficmanager.ExecutionCyclesRepository;
 import com.smarttrafficprototype.trafficmanager.Setup;
@@ -48,15 +49,21 @@ public class TrafficManager {
 	private Integer windowTimeCalculation = 5;
 	@Value("${setup.executionCycleDurationInMili}")
 	private Long executionCycleDuration = 1000l;
+	@Value("${setup.experimentDurationInMili}")
+	private Long experimentDuration = 120_000l;
+	@Autowired
+	private CSVWriter csvWriter;
 	
 	private Date greenLightStartTime;
 	private Integer greenLightTimeRemaining;
 	private InboundTrafficLine lineMaxDensity;
+
+	private static boolean executionFailed;
 	
 	private static long starting;
 	private static Classification classification;
 	private static int timeInSeconds;
-	
+	private static int count = 0;
 	
 	
 	
@@ -68,8 +75,13 @@ public class TrafficManager {
 			return;
 		}
 		
-		starting = new Date().getTime();
-		classification = Classification.COMPLETE;
+		if (isExperimentOver()) {
+			csvWriter.writeCSV();
+			count = 0;
+			return;
+		}
+		
+		setupExecution();
 		
 		triggerSensors();
 		
@@ -82,9 +94,23 @@ public class TrafficManager {
 		
 		calculateNextTimeGreenLight();
 		
+		if (executionFailed) {
+			return;
+		}
+		
 		changeTrafficLineGreenLight();
 		
 		logExecution();
+	}
+
+	private void setupExecution() {
+		starting = new Date().getTime();
+		classification = Classification.COMPLETE;
+		executionFailed = false;
+	}
+
+	private boolean isExperimentOver() {
+		return count++ >= (experimentDuration/executionCycleDuration);
 	}
 
 	private void logExecution() {
@@ -125,6 +151,11 @@ public class TrafficManager {
 					.stream().filter((inLn) -> inLn.getTrafficLight().isRed()).collect(Collectors.toList());
 			
 			getIncommingDensityFromNeighborJunctions(redLines);
+			
+			if (executionFailed) {
+				return;
+			}
+			
 			lineMaxDensity = getMaximumTrafficLine(redLines);
 			
 			int totalDensity = redLines.stream().map((line) -> line.getSensingUnit().getResultDensity()).reduce(Integer::sum).get();
@@ -156,6 +187,8 @@ public class TrafficManager {
 				incomingDensity = 0;
 				if (getCurrentDuration() > executionCycleDuration) {
 					classification = Classification.FAILED;
+					executionFailed = true;
+					return;
 				} else {
 					classification = Classification.INCOMPLETE;
 				}
