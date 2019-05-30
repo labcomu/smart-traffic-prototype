@@ -50,11 +50,11 @@ public class TrafficManagerController {
 				}
 				response = new ResponseEntity<Integer>(HttpStatus.SERVICE_UNAVAILABLE);
 			} else {
-				logger.info("Starting:"+"TrafficManager.call() to " + idJunction);
+				logger.info("Starting: TrafficManager.call() to " + idJunction);
 				
 				Integer densityValue = service.getOutboundDensityByTrafficJuncion(idJunction);
 				
-				logger.info("Returning:"+"TrafficManager.call():"+densityValue);
+				logger.info("Returning: TrafficManager.call():"+densityValue);
 
 				response = new ResponseEntity<>(densityValue, HttpStatus.OK);	
 			}
@@ -84,10 +84,10 @@ public class TrafficManagerController {
 	@GetMapping("/setup")
 	public ResponseEntity<String> setup() {
 		
-		logger.info("Starting Caller.Setup:[]");
+		logger.info("Starting TrafficManagerController.Setup:[]");
 		setupService.initializeSetup();
 		
-		logger.info("Finishing Caller.Setup:[]");
+		logger.info("Finishing TrafficManagerController.Setup:[]");
 		
 		return new ResponseEntity<>("SETUP OK", HttpStatus.OK);
 	}
