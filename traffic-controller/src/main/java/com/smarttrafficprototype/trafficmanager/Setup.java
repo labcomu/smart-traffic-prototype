@@ -12,6 +12,7 @@ public class Setup {
 	
 	public void activate() {
 		this.active = true;
+		this.startTime = (new Date()).getTime();
 	}
 	
 	public void deactivate() {
