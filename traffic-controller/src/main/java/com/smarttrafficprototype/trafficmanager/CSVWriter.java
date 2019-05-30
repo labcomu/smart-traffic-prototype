@@ -19,8 +19,8 @@ public class CSVWriter {
 			StringBuilder sb = new StringBuilder();
 			sb.append("id,");
 			sb.append("Timestamp,");
-			sb.append("Duração Ciclo");
-			sb.append("Classificação,");
+			sb.append("Cycle Duration");
+			sb.append("Classification,");
 			sb.append('\n');
 			
 			for (ExecutionCycle cycle : cyclesRepository.getAll()) {

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.smarttrafficprototype.trafficmanager.Classification;
 import com.smarttrafficprototype.trafficmanager.ExecutionCyclesRepository;
+import com.smarttrafficprototype.trafficmanager.Setup;
 import com.smarttrafficprototype.trafficmanager.service.ServiceRegistry;
 import com.smarttrafficprototype.trafficmanager.service.request.RemoteRequestService;
 
@@ -32,6 +33,8 @@ public class TrafficManager {
 	private ServiceRegistry serviceRegistry;
 	@Autowired
 	private ExecutionCyclesRepository repository;
+	@Autowired
+	private Setup setup;
 	
 	@Value("${setup.greenLight.initialDurationInSec}")
 	private Integer initialGreenLightDuration = 10;
@@ -60,6 +63,11 @@ public class TrafficManager {
 	
 	@Scheduled(initialDelayString="${setup.initialExecutionDelayInMili}", fixedDelayString="${setup.executionCycleDurationInMili}")
 	public void run() throws Exception {
+		
+		if (!setup.isActive()) {
+			return;
+		}
+		
 		starting = new Date().getTime();
 		classification = Classification.COMPLETE;
 		

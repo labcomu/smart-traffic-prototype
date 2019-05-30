@@ -37,7 +37,6 @@ public class FailureManager {
 		
 		if(failureEnabled) {
 			loadFailureFile();
-			setup.activate();
 		}
 	}
 	
