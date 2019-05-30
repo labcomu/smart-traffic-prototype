@@ -29,7 +29,7 @@ public class DeviceCBRequestService implements RemoteRequestService {
 				.append(deviceHost)
 				.append(":")
 				.append(devicePort)
-				.append("/trafficManager/");
+				.append("/trafficManager");
 		
 		for (String value : values) {
 			urlBuilder.append("/").append(value);
