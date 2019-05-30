@@ -49,7 +49,7 @@ public class TrafficManager {
 	@Value("${setup.executionCycleDurationInMili}")
 	private Long executionCycleDuration = 1000l;
 	
-	private Date greenLightStartTime = new Date();
+	private Date greenLightStartTime;
 	private Integer greenLightTimeRemaining;
 	private InboundTrafficLine lineMaxDensity;
 	
@@ -184,6 +184,10 @@ public class TrafficManager {
 			
 		}
 		return lineMaxDensity;
+	}
+	
+	public void startup() {
+		greenLightStartTime = new Date();
 	}
 
 }

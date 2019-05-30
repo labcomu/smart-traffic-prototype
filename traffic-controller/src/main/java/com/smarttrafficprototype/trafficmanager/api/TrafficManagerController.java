@@ -17,6 +17,7 @@ import com.smarttrafficprototype.trafficmanager.FailureManager;
 import com.smarttrafficprototype.trafficmanager.Setup;
 import com.smarttrafficprototype.trafficmanager.service.SetupService;
 import com.smarttrafficprototype.trafficmanager.service.TrafficJunctionService;
+import com.smarttrafficprototype.trafficmanager.service.registration.TrafficManager;
 
 @RestController
 @RequestMapping("/trafficManager")
@@ -32,6 +33,8 @@ public class TrafficManagerController {
 	private Setup setupManager;
 	@Autowired
 	private CSVWriter csvWriter;
+	@Autowired
+	private TrafficManager trafficManager;
 	@Value("${setup.omission.duration}")
 	private int omissionLockDuration;
 	
@@ -89,6 +92,7 @@ public class TrafficManagerController {
 		
 		logger.info("Finishing TrafficManagerController.Setup:[]");
 		
+		trafficManager.startup();
 		return new ResponseEntity<>("SETUP OK", HttpStatus.OK);
 	}
 	
@@ -96,7 +100,7 @@ public class TrafficManagerController {
 	public ResponseEntity<String> setuped() {
 		
 		setupManager.activate();
-		
+		trafficManager.startup();
 		return new ResponseEntity<>("SETUP OK", HttpStatus.OK);
 	}
 
