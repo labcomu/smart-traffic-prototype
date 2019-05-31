@@ -225,6 +225,9 @@ public class TrafficManager {
 	}
 	
 	private void executionCycleDelay() {
+		if (!generateCSV) {
+			return;
+		}
 		try {
 			Thread.sleep((long) (executionCycleDuration * 0.1));
 		} catch (InterruptedException e) {
