@@ -88,11 +88,12 @@ public class TrafficManagerController {
 	public ResponseEntity<String> setup() {
 		
 		logger.info("Starting TrafficManagerController.Setup:[]");
+		
+		trafficManager.startup();
 		setupService.initializeSetup();
 		
 		logger.info("Finishing TrafficManagerController.Setup:[]");
 		
-		trafficManager.startup();
 		return new ResponseEntity<>("SETUP OK", HttpStatus.OK);
 	}
 	

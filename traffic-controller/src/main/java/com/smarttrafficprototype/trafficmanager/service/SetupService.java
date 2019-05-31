@@ -31,7 +31,6 @@ public class SetupService {
 
 	public void initializeSetup() {
 		setup.activate();
-		
 		configureRestTemplateForSetup();
 
 		for (int i = 0; i < serviceRegistry.getTrafficJunctions().size(); i++ ) {
