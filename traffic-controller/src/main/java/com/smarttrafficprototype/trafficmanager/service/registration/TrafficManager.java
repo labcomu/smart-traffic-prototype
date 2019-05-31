@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import com.smarttrafficprototype.trafficmanager.CSVWriter;
 import com.smarttrafficprototype.trafficmanager.Classification;
 import com.smarttrafficprototype.trafficmanager.ExecutionCyclesRepository;
+import com.smarttrafficprototype.trafficmanager.ExecutionStatus;
 import com.smarttrafficprototype.trafficmanager.Setup;
 import com.smarttrafficprototype.trafficmanager.service.ServiceRegistry;
 import com.smarttrafficprototype.trafficmanager.service.request.RemoteRequestService;
@@ -57,16 +58,9 @@ public class TrafficManager {
 	private Date greenLightStartTime;
 	private Integer greenLightTimeRemaining;
 	private InboundTrafficLine lineMaxDensity;
-
-	private static boolean executionFailed;
 	
-	private static long starting;
-	private static Classification classification;
-	private static int timeInSeconds;
 	private static int count = 0;
-	
-	
-	
+
 	
 	@Scheduled(initialDelayString="${setup.initialExecutionDelayInMili}", fixedRateString="${setup.executionCycleDurationInMili}")
 	public void run() throws Exception {
@@ -81,7 +75,7 @@ public class TrafficManager {
 			return;
 		}
 		
-		setupExecution();
+		ExecutionStatus execution = setupExecution();
 		
 		triggerSensors();
 		
@@ -92,34 +86,32 @@ public class TrafficManager {
 		
 		trafficJunction.toString();
 		
-		calculateNextTimeGreenLight();
+		calculateNextTimeGreenLight(execution);
 		
-		if (executionFailed) {
+		if (execution.isExecutionFailed()) {
 			return;
 		}
 		
-		changeTrafficLineGreenLight();
+		changeTrafficLineGreenLight(execution);
 		
-		logExecution();
+		logExecution(execution);
 	}
 
-	private void setupExecution() {
-		starting = new Date().getTime();
-		classification = Classification.COMPLETE;
-		executionFailed = false;
+	private ExecutionStatus setupExecution() {
+		return new ExecutionStatus();
 	}
 
 	private boolean isExperimentOver() {
 		return count++ >= (experimentDuration/executionCycleDuration);
 	}
 
-	private void logExecution() {
-		repository.addExecution(getCurrentDuration(), classification);
+	private void logExecution(ExecutionStatus execution) {
+		repository.addExecution(getCurrentDuration(execution), execution.getClassification());
 	}
 
-	private void changeTrafficLineGreenLight() {
+	private void changeTrafficLineGreenLight(ExecutionStatus execution) {
 		if (greenLightTimeRemaining < FINAL_SECOND) {
-			setGreenLightDuration();
+			setGreenLightDuration(execution);
 			
 			InboundTrafficLine greenTrafficLine = trafficJunction.getInboundLines()
 					.stream().filter((inLn) -> inLn.getTrafficLight().isGreen()).findFirst().get();
@@ -135,24 +127,24 @@ public class TrafficManager {
 		}
 	}
 
-	private void setGreenLightDuration() {
-		if (timeInSeconds <= minimumGreenLightDuration) {
+	private void setGreenLightDuration(ExecutionStatus execution) {
+		if (execution.getTimeInSeconds() <= minimumGreenLightDuration) {
 			initialGreenLightDuration = minimumGreenLightDuration;
-		} else if (timeInSeconds > maximumGreenLightDuration) {
+		} else if (execution.getTimeInSeconds() > maximumGreenLightDuration) {
 			initialGreenLightDuration = maximumGreenLightDuration;
 		} else {
-			initialGreenLightDuration = timeInSeconds;
+			initialGreenLightDuration = execution.getTimeInSeconds();
 		}
 	}
 
-	private void calculateNextTimeGreenLight() {
+	private void calculateNextTimeGreenLight(ExecutionStatus execution) {
 		if (greenLightTimeRemaining > FINAL_SECOND) {
 			List<InboundTrafficLine> redLines = trafficJunction.getInboundLines()
 					.stream().filter((inLn) -> inLn.getTrafficLight().isRed()).collect(Collectors.toList());
 			
-			getIncommingDensityFromNeighborJunctions(redLines);
+			getIncommingDensityFromNeighborJunctions(redLines, execution);
 			
-			if (executionFailed) {
+			if (execution.isExecutionFailed()) {
 				return;
 			}
 			
@@ -162,17 +154,17 @@ public class TrafficManager {
 			
 			if (totalDensity > 0) {
 				Double calcTime = (lineMaxDensity.getTotalDensity().doubleValue() / totalDensity) * trafficJunctionCycleDuration;
-				timeInSeconds = calcTime.intValue();
+				execution.setTimeInSeconds(calcTime.intValue());
 			} else {
-				timeInSeconds = 0;
+				execution.setTimeInSeconds(0);
 			}
 			
-			logger.info("Calculating time of next green: (" + lineMaxDensity.getTotalDensity() + "/" + totalDensity + ") * "+trafficJunctionCycleDuration+" = " + timeInSeconds );
+			logger.info("Calculating time of next green: (" + lineMaxDensity.getTotalDensity() + "/" + totalDensity + ") * "+trafficJunctionCycleDuration+" = " + execution.getTimeInSeconds() );
 			
 		}
 	}
 	
-	private void getIncommingDensityFromNeighborJunctions(List<InboundTrafficLine> inboundLines) {
+	private void getIncommingDensityFromNeighborJunctions(List<InboundTrafficLine> inboundLines, ExecutionStatus execution) {
 		for (InboundTrafficLine trafficLine : inboundLines) {
 			TrafficJunction inboundTrafficJunction = trafficLine.getInboundTrafficJunction();
 			Integer incomingDensity = 0;
@@ -185,13 +177,13 @@ public class TrafficManager {
 				}
 			} catch (Exception ex) {
 				incomingDensity = 0;
-				if (getCurrentDuration() > executionCycleDuration) {
-					classification = Classification.FAILED;
-					executionFailed = true;
-					logExecution();
+				if (getCurrentDuration(execution) > executionCycleDuration) {
+					execution.setClassification(Classification.FAILED);
+					execution.setExecutionFailed(true);
+					logExecution(execution);
 					return;
 				} else {
-					classification = Classification.INCOMPLETE;
+					execution.setClassification(Classification.INCOMPLETE);
 				}
 			}
 			
@@ -199,8 +191,8 @@ public class TrafficManager {
 		}
 	}
 	
-	private long getCurrentDuration() {
-		return new Date().getTime() - starting;
+	private long getCurrentDuration(ExecutionStatus execution) {
+		return new Date().getTime() - execution.getStarting();
 	}
 	
 	private void triggerSensors() {
