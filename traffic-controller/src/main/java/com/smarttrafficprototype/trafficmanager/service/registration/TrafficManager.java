@@ -96,13 +96,7 @@ public class TrafficManager {
 			
 			logger.info("#ID" + execution.getId() + ": Green light remainging time: " + greenLightTimeRemaining + " seconds");
 			
-			//trafficJunction.toString();
-			
 			calculateNextTimeGreenLight(execution);
-			
-			if (execution.isExecutionFailed()) {
-				return;
-			}
 			
 			changeTrafficLineGreenLight(execution);
 			
@@ -112,15 +106,14 @@ public class TrafficManager {
 		}
 	}
 
-	private ExecutionStatus setupExecution() {
-		return new ExecutionStatus(count);
-	}
-
-	private boolean isExperimentOver() {
-		return count >= (experimentDuration/executionCycleDuration);
-	}
-
 	private void logExecution(ExecutionStatus execution) {
+		if (getCurrentDuration(execution) > executionCycleDuration) {
+			logger.info("#ID" + execution.getId() + " execution failed");
+			execution.setClassification(Classification.FAILED);
+		} else {
+			logger.info("#ID" + execution.getId() + " execution incomplete");
+			execution.setClassification(Classification.INCOMPLETE);
+		}
 		repository.addExecution(getCurrentDuration(execution), execution);
 	}
 
@@ -153,34 +146,31 @@ public class TrafficManager {
 	}
 
 	private void calculateNextTimeGreenLight(ExecutionStatus execution) {
-		//if (greenLightTimeRemaining > FINAL_SECOND) {
-			logger.info("#ID" + execution.getId() + " start of next green light calculation.");
-			List<InboundTrafficLine> redLines = trafficJunction.getInboundLines()
-					.stream().filter((inLn) -> inLn.getTrafficLight().isRed()).collect(Collectors.toList());
-			
-			getIncommingDensityFromNeighborJunctions(redLines, execution);
-			
-			if (execution.isExecutionFailed()) {
-				return;
-			}
-			
-			lineMaxDensity = getMaximumTrafficLine(redLines);
-			
-			int totalDensity = redLines.stream().map((line) -> line.getSensingUnit().getResultDensity()).reduce(Integer::sum).get();
-			
-			if (totalDensity > 0) {
-				Double calcTime = (lineMaxDensity.getTotalDensity().doubleValue() / totalDensity) * trafficJunctionCycleDuration;
-				execution.setTimeInSeconds(calcTime.intValue());
-			} else {
-				execution.setTimeInSeconds(0);
-			}
-			
-			logger.info("#ID" + execution.getId() + "Calculating time of next green: (" + lineMaxDensity.getTotalDensity() + "/" + totalDensity + ") * "+trafficJunctionCycleDuration+" = " + execution.getTimeInSeconds() );
-			
-		//}
+		logger.info("#ID" + execution.getId() + " start of next green light calculation.");
+		List<InboundTrafficLine> redLines = trafficJunction.getInboundLines()
+				.stream().filter((inLn) -> inLn.getTrafficLight().isRed()).collect(Collectors.toList());
+		
+		getIncommingDensityFromNeighborJunctions(redLines, execution);
+		
+		getTrafficLinesDesnsity(redLines, execution);
+		
+		lineMaxDensity = getMaximumTrafficLine(redLines, execution);
+		
+		int totalDensity = redLines.stream().map((line) -> line.getSensingUnit().getResultDensity()).reduce(Integer::sum).get();
+		
+		if (totalDensity > 0) {
+			Double calcTime = (lineMaxDensity.getTotalDensity().doubleValue() / totalDensity) * trafficJunctionCycleDuration;
+			execution.setTimeInSeconds(calcTime.intValue());
+		} else {
+			execution.setTimeInSeconds(0);
+		}
+		
+		logger.info("#ID" + execution.getId() + "Calculating time of next green: (" + lineMaxDensity.getTotalDensity() + "/" + totalDensity + ") * "+trafficJunctionCycleDuration+" = " + execution.getTimeInSeconds() );
+		
 	}
 	
 	private void getIncommingDensityFromNeighborJunctions(List<InboundTrafficLine> inboundLines, ExecutionStatus execution) {
+		execution.markAdjacentCalculation();
 		for (InboundTrafficLine trafficLine : inboundLines) {
 			TrafficJunction inboundTrafficJunction = trafficLine.getInboundTrafficJunction();
 			Integer incomingDensity = 0;
@@ -193,20 +183,33 @@ public class TrafficManager {
 				}
 			} catch (Exception ex) {
 				incomingDensity = 0;
-				if (getCurrentDuration(execution) > executionCycleDuration) {
-					execution.setClassification(Classification.FAILED);
-					execution.setExecutionFailed(true);
-					logger.info("#ID" + execution.getId() + " execution failed");
-					logExecution(execution);
-					return;
-				} else {
-					logger.info("#ID" + execution.getId() + " execution incomplete");
-					execution.setClassification(Classification.INCOMPLETE);
-				}
 			}
 			
 			trafficLine.setIncomingDensity(incomingDensity);
 		}
+	}
+	
+	private void getTrafficLinesDesnsity(List<InboundTrafficLine> redLines, ExecutionStatus execution) {
+		execution.markLocalCalculation();
+		executionCycleDelay();
+		
+		for (InboundTrafficLine inboundTrafficLine : redLines) {
+			inboundTrafficLine.getTotalDensity();
+		}
+		
+	}
+
+	private InboundTrafficLine getMaximumTrafficLine(List<InboundTrafficLine> inboundLines, ExecutionStatus execution) {
+		execution.markTakeDecision();
+		executionCycleDelay();
+		InboundTrafficLine lineMaxDensity = null;
+		for (InboundTrafficLine trafficLine : inboundLines) {
+			if (lineMaxDensity == null || trafficLine.getTotalDensity() > lineMaxDensity.getTotalDensity()) {
+				lineMaxDensity = trafficLine;
+			}
+			
+		}
+		return lineMaxDensity;
 	}
 	
 	private long getCurrentDuration(ExecutionStatus execution) {
@@ -218,16 +221,21 @@ public class TrafficManager {
 			sensor.notifySensingUnit();
 		}
 	}
-
-	private InboundTrafficLine getMaximumTrafficLine(List<InboundTrafficLine> inboundLines) {
-		InboundTrafficLine lineMaxDensity = null;
-		for (InboundTrafficLine trafficLine : inboundLines) {
-			if (lineMaxDensity == null || trafficLine.getTotalDensity() > lineMaxDensity.getTotalDensity()) {
-				lineMaxDensity = trafficLine;
-			}
-			
+	
+	private void executionCycleDelay() {
+		try {
+			Thread.sleep((long) (executionCycleDuration * 0.1));
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
-		return lineMaxDensity;
+	}
+	
+	private ExecutionStatus setupExecution() {
+		return new ExecutionStatus(count);
+	}
+
+	private boolean isExperimentOver() {
+		return count >= (experimentDuration/executionCycleDuration);
 	}
 	
 	public void startup() {

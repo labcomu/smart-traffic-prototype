@@ -26,6 +26,10 @@ public class CSVWriter {
 			sb.append("start,");
 			sb.append("end,");
 			sb.append("executedAt,");
+			sb.append("adjacent,");
+			sb.append("local,");
+			sb.append("takeDecision,");
+			sb.append("colaboration,");
 			sb.append("duration,");
 			sb.append("result,");
 			sb.append('\n');
@@ -35,6 +39,10 @@ public class CSVWriter {
 				sb.append(cycle.getStart().getTime()).append(',');
 				sb.append(cycle.getEnd().getTime()).append(',');
 				sb.append(formatter.format(cycle.getEnd())).append(',');
+				sb.append(cycle.getStartAdjacent().getTime()).append(',');
+				sb.append(cycle.getStartLocal().getTime()).append(',');
+				sb.append(cycle.getStartDecision().getTime()).append(',');
+				sb.append(cycle.getStartCol().getTime()).append(',');
 				sb.append(cycle.getDuration()).append(',');
 				sb.append(cycle.getClassification().toString()).append('\n');
 			}

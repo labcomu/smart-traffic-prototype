@@ -7,6 +7,10 @@ public class ExecutionStatus {
 	private int id;
 	private boolean executionFailed;
 	private Date start;
+	private Date startAdjacentDensityCalculation;
+	private Date startLocalDensityCalculation;
+	private Date startTakeDecision;
+	private Date startColaboration;
 	private Classification classification;
 	private int timeInSeconds;
 	
@@ -15,6 +19,7 @@ public class ExecutionStatus {
 		this.classification = Classification.COMPLETE;
 		this.timeInSeconds = 0;
 		this.start = new Date();
+		this.
 		setId(id);
 	}
 
@@ -61,7 +66,54 @@ public class ExecutionStatus {
 	public void setStart(Date start) {
 		this.start = start;
 	}
+
+	public Date getStartAdjacentDensityCalculation() {
+		return startAdjacentDensityCalculation;
+	}
+
+	public void setStartAdjacentDensityCalculation(Date startAdjacentDensityCalculation) {
+		this.startAdjacentDensityCalculation = startAdjacentDensityCalculation;
+	}
+
+	public Date getStartLocalDensityCalculation() {
+		return startLocalDensityCalculation;
+	}
+
+	public void setStartLocalDensityCalculation(Date startLocalDensityCalculation) {
+		this.startLocalDensityCalculation = startLocalDensityCalculation;
+	}
+
+	public Date getStartColaboration() {
+		return startColaboration;
+	}
+
+	public void setStartColaboration(Date startColaboration) {
+		this.startColaboration = startColaboration;
+	}
 	
+	public Date getStartTakeDecision() {
+		return startTakeDecision;
+	}
+
+	public void setStartTakeDecision(Date startTakeDecision) {
+		this.startTakeDecision = startTakeDecision;
+	}
+	
+	public void markLocalCalculation() {
+		setStartLocalDensityCalculation(new Date());
+	}
+	
+	public void markAdjacentCalculation() {
+		setStartAdjacentDensityCalculation(new Date());
+	}
+	
+	public void markStartColaboration() {
+		setStartColaboration(new Date());
+	}
+
+	public void markTakeDecision() {
+		setStartTakeDecision(new Date());
+	}
 	
 	
 	
