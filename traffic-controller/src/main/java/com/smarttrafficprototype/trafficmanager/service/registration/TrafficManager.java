@@ -100,6 +100,8 @@ public class TrafficManager {
 			
 			changeTrafficLineGreenLight(execution);
 			
+			colaborateWithOtherManagers(execution);
+			
 			logExecution(execution);
 		} catch (Exception ex) {
 			logger.info("Falha na execução", ex);
@@ -228,6 +230,10 @@ public class TrafficManager {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private void colaborateWithOtherManagers(ExecutionStatus execution) {
+		execution.markStartColaboration();
 	}
 	
 	private ExecutionStatus setupExecution() {
