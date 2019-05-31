@@ -64,41 +64,45 @@ public class TrafficManager {
 	
 	@Scheduled(initialDelayString="${setup.initialExecutionDelayInMili}", fixedRateString="${setup.executionCycleDurationInMili}")
 	public void run() throws Exception {
+		try {
 		
-		if (!setup.isActive()) {
-			logger.info("Execution is disabled.");
-			return;
+			if (!setup.isActive()) {
+				logger.info("Execution is disabled.");
+				return;
+			}
+			
+			if (isExperimentOver()) {
+				csvWriter.writeCSV();
+				count = 0;
+				logger.info("Execution is over.");
+				return;
+			}
+			count++;
+			ExecutionStatus execution = setupExecution();
+			
+			logger.info("Starting execution #ID" + execution.getId());
+			
+			triggerSensors();
+			
+			Long greenLightTimeElapsed = new Date().getTime() - greenLightStartTime.getTime();
+			greenLightTimeRemaining =  greenLightDuration - (greenLightTimeElapsed.intValue() / MILLISECONDS);
+			
+			logger.info("#ID" + execution.getId() + ": Green light remainging time: " + greenLightTimeRemaining + " seconds");
+			
+			//trafficJunction.toString();
+			
+			calculateNextTimeGreenLight(execution);
+			
+			if (execution.isExecutionFailed()) {
+				return;
+			}
+			
+			changeTrafficLineGreenLight(execution);
+			
+			logExecution(execution);
+		} catch (Exception ex) {
+			logger.info("Falha na execução", ex);
 		}
-		
-		if (isExperimentOver()) {
-			csvWriter.writeCSV();
-			count = 0;
-			logger.info("Execution is over.");
-			return;
-		}
-		count++;
-		ExecutionStatus execution = setupExecution();
-		
-		logger.info("Starting execution #ID" + execution.getId());
-		
-		triggerSensors();
-		
-		Long greenLightTimeElapsed = new Date().getTime() - greenLightStartTime.getTime();
-		greenLightTimeRemaining =  greenLightDuration - (greenLightTimeElapsed.intValue() / MILLISECONDS);
-		
-		logger.info("#ID" + execution.getId() + ": Green light remainging time: " + greenLightTimeRemaining + " seconds");
-		
-		//trafficJunction.toString();
-		
-		calculateNextTimeGreenLight(execution);
-		
-		if (execution.isExecutionFailed()) {
-			return;
-		}
-		
-		changeTrafficLineGreenLight(execution);
-		
-		logExecution(execution);
 	}
 
 	private ExecutionStatus setupExecution() {
