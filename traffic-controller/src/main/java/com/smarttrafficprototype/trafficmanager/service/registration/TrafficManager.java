@@ -109,12 +109,14 @@ public class TrafficManager {
 	}
 
 	private void logExecution(ExecutionStatus execution) {
-		if (getCurrentDuration(execution) > executionCycleDuration) {
-			logger.info("#ID" + execution.getId() + " execution failed");
-			execution.setClassification(Classification.FAILED);
-		} else {
-			logger.info("#ID" + execution.getId() + " execution incomplete");
-			execution.setClassification(Classification.INCOMPLETE);
+		if (execution.isExecutionFailed()) {
+			if (getCurrentDuration(execution) > executionCycleDuration) {
+				logger.info("#ID" + execution.getId() + " execution failed");
+				execution.setClassification(Classification.FAILED);
+			} else {
+				logger.info("#ID" + execution.getId() + " execution incomplete");
+				execution.setClassification(Classification.INCOMPLETE);
+			}
 		}
 		repository.addExecution(getCurrentDuration(execution), execution);
 	}
@@ -181,10 +183,11 @@ public class TrafficManager {
 					incomingDensity = requestService.requestDensity(
 							inboundTrafficJunction.getHost(), inboundTrafficJunction.getPort(), new String[]{trafficJunction.getJunctionKey()});
 					
-					logger.info("#ID" + execution.getId() + "I ncoming density: " + incomingDensity + " from " + trafficLine.getInboundTrafficJunction().getJunctionKey());
+					logger.info("#ID" + execution.getId() + "Incoming density: " + incomingDensity + " from " + trafficLine.getInboundTrafficJunction().getJunctionKey());
 				}
 			} catch (Exception ex) {
 				incomingDensity = 0;
+				execution.setExecutionFailed(true);
 			}
 			
 			trafficLine.setIncomingDensity(incomingDensity);
