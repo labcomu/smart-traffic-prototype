@@ -110,7 +110,7 @@ public class TrafficManager {
 	}
 
 	private void logExecution(ExecutionStatus execution) {
-		repository.addExecution(getCurrentDuration(execution), execution.getClassification());
+		repository.addExecution(getCurrentDuration(execution), execution);
 	}
 
 	private void changeTrafficLineGreenLight(ExecutionStatus execution) {
