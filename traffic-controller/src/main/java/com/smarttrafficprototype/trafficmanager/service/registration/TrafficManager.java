@@ -39,7 +39,7 @@ public class TrafficManager {
 	private Setup setup;
 	
 	@Value("${setup.greenLight.initialDurationInSec}")
-	private Integer initialGreenLightDuration = 10;
+	private Integer greenLightDuration = 10;
 	@Value("${setup.greenLight.minimumDuration}")
 	private Integer minimumGreenLightDuration = 10;
 	@Value("${setup.greenLight.maximumDuration}")
@@ -84,7 +84,7 @@ public class TrafficManager {
 		triggerSensors();
 		
 		Long greenLightTimeElapsed = new Date().getTime() - greenLightStartTime.getTime();
-		greenLightTimeRemaining =  initialGreenLightDuration - (greenLightTimeElapsed.intValue() / MILLISECONDS);
+		greenLightTimeRemaining =  greenLightDuration - (greenLightTimeElapsed.intValue() / MILLISECONDS);
 		
 		logger.info("#ID" + execution.getId() + ": Green light remainging time: " + greenLightTimeRemaining + " seconds");
 		
@@ -133,16 +133,16 @@ public class TrafficManager {
 
 	private void setGreenLightDuration(ExecutionStatus execution) {
 		if (execution.getTimeInSeconds() <= minimumGreenLightDuration) {
-			initialGreenLightDuration = minimumGreenLightDuration;
+			greenLightDuration = minimumGreenLightDuration;
 		} else if (execution.getTimeInSeconds() > maximumGreenLightDuration) {
-			initialGreenLightDuration = maximumGreenLightDuration;
+			greenLightDuration = maximumGreenLightDuration;
 		} else {
-			initialGreenLightDuration = execution.getTimeInSeconds();
+			greenLightDuration = execution.getTimeInSeconds();
 		}
 	}
 
 	private void calculateNextTimeGreenLight(ExecutionStatus execution) {
-		if (greenLightTimeRemaining > FINAL_SECOND) {
+		//if (greenLightTimeRemaining > FINAL_SECOND) {
 			logger.info("#ID" + execution.getId() + " start of next green light calculation.");
 			List<InboundTrafficLine> redLines = trafficJunction.getInboundLines()
 					.stream().filter((inLn) -> inLn.getTrafficLight().isRed()).collect(Collectors.toList());
@@ -166,7 +166,7 @@ public class TrafficManager {
 			
 			logger.info("#ID" + execution.getId() + "Calculating time of next green: (" + lineMaxDensity.getTotalDensity() + "/" + totalDensity + ") * "+trafficJunctionCycleDuration+" = " + execution.getTimeInSeconds() );
 			
-		}
+		//}
 	}
 	
 	private void getIncommingDensityFromNeighborJunctions(List<InboundTrafficLine> inboundLines, ExecutionStatus execution) {
