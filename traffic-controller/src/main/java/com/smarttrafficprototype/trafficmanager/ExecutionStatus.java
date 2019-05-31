@@ -6,15 +6,15 @@ public class ExecutionStatus {
 
 	private int id;
 	private boolean executionFailed;
-	private long starting;
+	private Date start;
 	private Classification classification;
 	private int timeInSeconds;
 	
 	public ExecutionStatus(int id) {
 		this.executionFailed = false;
-		this.starting = new Date().getTime();
 		this.classification = Classification.COMPLETE;
 		this.timeInSeconds = 0;
+		this.start = new Date();
 		setId(id);
 	}
 
@@ -27,11 +27,7 @@ public class ExecutionStatus {
 	}
 
 	public long getStarting() {
-		return starting;
-	}
-
-	public void setStarting(long starting) {
-		this.starting = starting;
+		return getStart().getTime();
 	}
 
 	public Classification getClassification() {
@@ -56,6 +52,14 @@ public class ExecutionStatus {
 
 	public void setId(int id) {
 		this.id = id;
+	}
+
+	public Date getStart() {
+		return start;
+	}
+
+	public void setStart(Date start) {
+		this.start = start;
 	}
 	
 	

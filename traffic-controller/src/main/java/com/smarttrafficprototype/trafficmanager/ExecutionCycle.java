@@ -5,13 +5,14 @@ import java.util.Date;
 public class ExecutionCycle {
 
 	private Integer id;
-	private Date moment;
+	private Date start;
+	private Date end;
 	private Classification classification;
 	private long duration;
 	
-	public ExecutionCycle(int id, Date date, long duration, Classification classification) {
+	public ExecutionCycle(int id, Date start, Date end, long duration, Classification classification) {
 		setId(id);
-		setMoment(date);
+		setEnd(end);
 		setDuration(duration);
 		setClassification(classification);
 	}
@@ -22,11 +23,11 @@ public class ExecutionCycle {
 	public void setId(Integer id) {
 		this.id = id;
 	}
-	public Date getMoment() {
-		return moment;
+	public Date getEnd() {
+		return end;
 	}
-	public void setMoment(Date moment) {
-		this.moment = moment;
+	public void setEnd(Date moment) {
+		this.end = moment;
 	}
 	public Classification getClassification() {
 		return classification;
@@ -39,6 +40,14 @@ public class ExecutionCycle {
 	}
 	public void setDuration(long duration) {
 		this.duration = duration;
+	}
+
+	public Date getStart() {
+		return start;
+	}
+
+	public void setStart(Date start) {
+		this.start = start;
 	}
 	
 }

@@ -23,7 +23,7 @@ public class ExecutionCyclesRepository {
 	public void addExecution(long duration, ExecutionStatus execution) {
 		Date moment = new Date();
 		logger.info("#ID: " + execution.getId() + "; Moment:" + moment + "; Duration: " + duration + "; Classification: " + execution.getClassification());
-		cycles.add(new ExecutionCycle(execution.getId(), new Date(), duration, execution.getClassification()));
+		cycles.add(new ExecutionCycle(execution.getId(), execution.getStart(), new Date(), duration, execution.getClassification()));
 	}
 	
 }
