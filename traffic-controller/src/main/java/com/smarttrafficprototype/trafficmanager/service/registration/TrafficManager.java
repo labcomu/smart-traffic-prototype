@@ -66,12 +66,14 @@ public class TrafficManager {
 	public void run() throws Exception {
 		
 		if (!setup.isActive()) {
+			logger.info("Execution is disabled.");
 			return;
 		}
 		
 		if (isExperimentOver()) {
 			csvWriter.writeCSV();
 			count = 0;
+			logger.info("Execution is over.");
 			return;
 		}
 		
