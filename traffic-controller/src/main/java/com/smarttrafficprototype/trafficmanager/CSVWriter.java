@@ -5,12 +5,14 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CSVWriter {
-	
+	public Logger logger = LoggerFactory.getLogger(getClass());
 	@Autowired
 	private ExecutionCyclesRepository cyclesRepository;
 	
@@ -39,8 +41,8 @@ public class CSVWriter {
 
 			writer.write(sb.toString());
 			
-			System.out.println("done!");
-
+			logger.info(sb.toString());
+			logger.info("DONE!");
 		} catch (FileNotFoundException e) {
 			System.out.println(e.getMessage());
 		}
