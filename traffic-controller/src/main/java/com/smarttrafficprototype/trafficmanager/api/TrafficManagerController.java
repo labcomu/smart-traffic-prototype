@@ -89,8 +89,8 @@ public class TrafficManagerController {
 		
 		logger.info("Starting TrafficManagerController.Setup:[]");
 		
-		trafficManager.startup();
 		setupService.initializeSetup();
+		trafficManager.startup();
 		
 		logger.info("Finishing TrafficManagerController.Setup:[]");
 		
