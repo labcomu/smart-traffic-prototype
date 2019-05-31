@@ -52,6 +52,8 @@ public class TrafficManager {
 	private Long executionCycleDuration = 1000l;
 	@Value("${setup.experimentDurationInMili}")
 	private Long experimentDuration = 120_000l;
+	@Value("${setup.generateCSV}")
+	private boolean generateCSV = false;
 	@Autowired
 	private CSVWriter csvWriter;
 	
@@ -74,7 +76,7 @@ public class TrafficManager {
 			
 			if (isExperimentOver()) {
 				logger.info("Execution is over.");
-				if (stopWrite) {
+				if (generateCSV && stopWrite) {
 					csvWriter.writeCSV();
 					stopWrite = false;
 					
