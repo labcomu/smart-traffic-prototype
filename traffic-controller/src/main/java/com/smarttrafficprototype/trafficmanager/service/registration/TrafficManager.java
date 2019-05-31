@@ -59,6 +59,7 @@ public class TrafficManager {
 	private Integer greenLightTimeRemaining;
 	private InboundTrafficLine lineMaxDensity;
 	
+	private boolean stopWrite = true;
 	private static int count = 0;
 
 	
@@ -72,9 +73,13 @@ public class TrafficManager {
 			}
 			
 			if (isExperimentOver()) {
-				csvWriter.writeCSV();
-				count = 0;
 				logger.info("Execution is over.");
+				if (stopWrite) {
+					csvWriter.writeCSV();
+					stopWrite = false;
+					
+					logger.info("Execution result written.");
+				}
 				return;
 			}
 			count++;
