@@ -12,6 +12,7 @@ public class ExecutionCycle {
 	
 	public ExecutionCycle(int id, Date start, Date end, long duration, Classification classification) {
 		setId(id);
+		setStart(start);
 		setEnd(end);
 		setDuration(duration);
 		setClassification(classification);
