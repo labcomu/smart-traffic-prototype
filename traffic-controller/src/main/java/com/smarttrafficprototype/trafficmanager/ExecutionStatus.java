@@ -4,16 +4,18 @@ import java.util.Date;
 
 public class ExecutionStatus {
 
+	private int id;
 	private boolean executionFailed;
 	private long starting;
 	private Classification classification;
 	private int timeInSeconds;
 	
-	public ExecutionStatus() {
+	public ExecutionStatus(int id) {
 		this.executionFailed = false;
 		this.starting = new Date().getTime();
 		this.classification = Classification.COMPLETE;
 		this.timeInSeconds = 0;
+		setId(id);
 	}
 
 	public boolean isExecutionFailed() {
@@ -46,6 +48,14 @@ public class ExecutionStatus {
 
 	public void setTimeInSeconds(int timeInSeconds) {
 		this.timeInSeconds = timeInSeconds;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
 	}
 	
 	

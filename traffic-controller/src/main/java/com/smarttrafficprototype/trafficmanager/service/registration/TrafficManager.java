@@ -77,14 +77,16 @@ public class TrafficManager {
 		
 		ExecutionStatus execution = setupExecution();
 		
+		logger.info("Starting execution #ID" + execution.getId());
+		
 		triggerSensors();
 		
 		Long greenLightTimeElapsed = new Date().getTime() - greenLightStartTime.getTime();
 		greenLightTimeRemaining =  initialGreenLightDuration - (greenLightTimeElapsed.intValue() / MILLISECONDS);
 		
-		logger.info("Green light remainging time: " + greenLightTimeRemaining + " seconds");
+		logger.info("#ID" + execution.getId() + ": Green light remainging time: " + greenLightTimeRemaining + " seconds");
 		
-		trafficJunction.toString();
+		//trafficJunction.toString();
 		
 		calculateNextTimeGreenLight(execution);
 		
@@ -98,7 +100,7 @@ public class TrafficManager {
 	}
 
 	private ExecutionStatus setupExecution() {
-		return new ExecutionStatus();
+		return new ExecutionStatus(count);
 	}
 
 	private boolean isExperimentOver() {
@@ -139,6 +141,7 @@ public class TrafficManager {
 
 	private void calculateNextTimeGreenLight(ExecutionStatus execution) {
 		if (greenLightTimeRemaining > FINAL_SECOND) {
+			logger.info("#ID" + execution.getId() + " start of next green light calculation.");
 			List<InboundTrafficLine> redLines = trafficJunction.getInboundLines()
 					.stream().filter((inLn) -> inLn.getTrafficLight().isRed()).collect(Collectors.toList());
 			
@@ -159,7 +162,7 @@ public class TrafficManager {
 				execution.setTimeInSeconds(0);
 			}
 			
-			logger.info("Calculating time of next green: (" + lineMaxDensity.getTotalDensity() + "/" + totalDensity + ") * "+trafficJunctionCycleDuration+" = " + execution.getTimeInSeconds() );
+			logger.info("#ID" + execution.getId() + "Calculating time of next green: (" + lineMaxDensity.getTotalDensity() + "/" + totalDensity + ") * "+trafficJunctionCycleDuration+" = " + execution.getTimeInSeconds() );
 			
 		}
 	}
@@ -173,16 +176,18 @@ public class TrafficManager {
 					incomingDensity = requestService.requestDensity(
 							inboundTrafficJunction.getHost(), inboundTrafficJunction.getPort(), new String[]{trafficJunction.getJunctionKey()});
 					
-					logger.info("Incoming density: " + incomingDensity + " from " + trafficLine.getInboundTrafficJunction().getJunctionKey());
+					logger.info("#ID" + execution.getId() + "I ncoming density: " + incomingDensity + " from " + trafficLine.getInboundTrafficJunction().getJunctionKey());
 				}
 			} catch (Exception ex) {
 				incomingDensity = 0;
 				if (getCurrentDuration(execution) > executionCycleDuration) {
 					execution.setClassification(Classification.FAILED);
 					execution.setExecutionFailed(true);
+					logger.info("#ID" + execution.getId() + " execution failed");
 					logExecution(execution);
 					return;
 				} else {
+					logger.info("#ID" + execution.getId() + " execution incomplete");
 					execution.setClassification(Classification.INCOMPLETE);
 				}
 			}
