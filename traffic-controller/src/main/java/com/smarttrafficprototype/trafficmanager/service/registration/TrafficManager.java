@@ -76,7 +76,7 @@ public class TrafficManager {
 			logger.info("Execution is over.");
 			return;
 		}
-		
+		count++;
 		ExecutionStatus execution = setupExecution();
 		
 		logger.info("Starting execution #ID" + execution.getId());
@@ -106,7 +106,7 @@ public class TrafficManager {
 	}
 
 	private boolean isExperimentOver() {
-		return count++ >= (experimentDuration/executionCycleDuration);
+		return count >= (experimentDuration/executionCycleDuration);
 	}
 
 	private void logExecution(ExecutionStatus execution) {
